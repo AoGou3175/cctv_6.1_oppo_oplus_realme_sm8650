@@ -1,0 +1,304 @@
+name: 发布测试
+
+env:
+  TZ: Asia/Shanghai
+
+on:
+  workflow_dispatch:
+    inputs:
+      ksu_type:
+        description: 'KernelSU 分支'
+        required: true
+        type: choice
+        default: 'resukisu'
+        options:
+          - 'resukisu'
+          - 'sukisu'
+          - 'ksunext'
+          - 'ksu'
+          - 'none'
+      susfs_enable:
+        description: '是否开启 susfs'
+        required: true
+        type: boolean
+        default: true
+      kpm_enable:
+        description: '是否开启 KPM'
+        required: true
+        type: boolean
+        default: false
+      lz4_enable:
+        description: '是否安装 lz4 1.10.0+zstd 1.5.7 补丁'
+        required: true
+        type: boolean
+        default: true
+      lz4kd_enable:
+        description: '是否安装 LZ4KD 补丁'
+        required: true
+        type: boolean
+        default: false
+      bbr_enable:
+        description: 'BBR 算法模式'
+        required: true
+        type: choice
+        default: 'false'
+        options:
+          - 'false'
+          - 'true'
+          - 'default'
+      droidspaces_enable:
+        description: 'Droidspaces 容器支持模式'
+        required: true
+        type: choice
+        default: 'false'
+        options:
+          - 'false'
+          - 'standard'
+          - 'extend'
+      better_net:
+        description: '是否开启网络功能拓展配置'
+        required: true
+        type: boolean
+        default: false
+      ssg_enable:
+        description: '是否启用三星 SSG IO 调度器'
+        required: true
+        type: boolean
+        default: true
+      rekernel_enable:
+        description: '是否启用 Re-Kernel 支持'
+        required: true
+        type: boolean
+        default: false
+      baseband_guard:
+        description: '是否开启内核级基带保护'
+        required: true
+        type: boolean
+        default: true
+      ccache_update:
+        description: '是否更新 ccache 缓存'
+        required: true
+        type: boolean
+        default: false
+      ccache_debug:
+        description: '是否上传 ccache 调试日志'
+        required: true
+        type: boolean
+        default: false
+      kernel_suffix:
+        description: '内核后缀，留空使用默认值'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  build_57:
+    name: 构建 6.1.57
+    uses: ./.github/workflows/fastbuild_6.1.57.yml
+    with:
+      ksu_type: ${{ inputs.ksu_type }}
+      susfs_enable: ${{ inputs.susfs_enable }}
+      kpm_enable: ${{ inputs.kpm_enable }}
+      lz4_enable: ${{ inputs.lz4_enable }}
+      lz4kd_enable: ${{ inputs.lz4kd_enable }}
+      bbr_enable: ${{ inputs.bbr_enable }}
+      droidspaces_enable: ${{ inputs.droidspaces_enable }}
+      better_net: ${{ inputs.better_net }}
+      ssg_enable: ${{ inputs.ssg_enable }}
+      rekernel_enable: ${{ inputs.rekernel_enable }}
+      baseband_guard: ${{ inputs.baseband_guard }}
+      ccache_update: ${{ inputs.ccache_update }}
+      ccache_debug: ${{ inputs.ccache_debug }}
+      kernel_suffix: ${{ inputs.kernel_suffix }}
+  build_75:
+    name: 构建 6.1.75
+    uses: ./.github/workflows/fastbuild_6.1.75.yml
+    with:
+      ksu_type: ${{ inputs.ksu_type }}
+      susfs_enable: ${{ inputs.susfs_enable }}
+      kpm_enable: ${{ inputs.kpm_enable }}
+      lz4_enable: ${{ inputs.lz4_enable }}
+      lz4kd_enable: ${{ inputs.lz4kd_enable }}
+      bbr_enable: ${{ inputs.bbr_enable }}
+      droidspaces_enable: ${{ inputs.droidspaces_enable }}
+      better_net: ${{ inputs.better_net }}
+      ssg_enable: ${{ inputs.ssg_enable }}
+      rekernel_enable: ${{ inputs.rekernel_enable }}
+      baseband_guard: ${{ inputs.baseband_guard }}
+      ccache_update: ${{ inputs.ccache_update }}
+      ccache_debug: ${{ inputs.ccache_debug }}
+      kernel_suffix: ${{ inputs.kernel_suffix }}
+  build_115:
+    name: 构建 6.1.115
+    uses: ./.github/workflows/fastbuild_6.1.115.yml
+    with:
+      ksu_type: ${{ inputs.ksu_type }}
+      susfs_enable: ${{ inputs.susfs_enable }}
+      kpm_enable: ${{ inputs.kpm_enable }}
+      lz4_enable: ${{ inputs.lz4_enable }}
+      lz4kd_enable: ${{ inputs.lz4kd_enable }}
+      bbr_enable: ${{ inputs.bbr_enable }}
+      droidspaces_enable: ${{ inputs.droidspaces_enable }}
+      better_net: ${{ inputs.better_net }}
+      ssg_enable: ${{ inputs.ssg_enable }}
+      rekernel_enable: ${{ inputs.rekernel_enable }}
+      baseband_guard: ${{ inputs.baseband_guard }}
+      ccache_update: ${{ inputs.ccache_update }}
+      ccache_debug: ${{ inputs.ccache_debug }}
+      kernel_suffix: ${{ inputs.kernel_suffix }}
+  build_118:
+    name: 构建 6.1.118
+    uses: ./.github/workflows/fastbuild_6.1.118.yml
+    with:
+      ksu_type: ${{ inputs.ksu_type }}
+      susfs_enable: ${{ inputs.susfs_enable }}
+      kpm_enable: ${{ inputs.kpm_enable }}
+      lz4_enable: ${{ inputs.lz4_enable }}
+      lz4kd_enable: ${{ inputs.lz4kd_enable }}
+      bbr_enable: ${{ inputs.bbr_enable }}
+      droidspaces_enable: ${{ inputs.droidspaces_enable }}
+      better_net: ${{ inputs.better_net }}
+      ssg_enable: ${{ inputs.ssg_enable }}
+      rekernel_enable: ${{ inputs.rekernel_enable }}
+      baseband_guard: ${{ inputs.baseband_guard }}
+      ccache_update: ${{ inputs.ccache_update }}
+      ccache_debug: ${{ inputs.ccache_debug }}
+      kernel_suffix: ${{ inputs.kernel_suffix }}
+  build_128:
+    name: 构建 6.1.128
+    uses: ./.github/workflows/fastbuild_6.1.128.yml
+    with:
+      ksu_type: ${{ inputs.ksu_type }}
+      susfs_enable: ${{ inputs.susfs_enable }}
+      kpm_enable: ${{ inputs.kpm_enable }}
+      lz4_enable: ${{ inputs.lz4_enable }}
+      lz4kd_enable: ${{ inputs.lz4kd_enable }}
+      bbr_enable: ${{ inputs.bbr_enable }}
+      droidspaces_enable: ${{ inputs.droidspaces_enable }}
+      better_net: ${{ inputs.better_net }}
+      ssg_enable: ${{ inputs.ssg_enable }}
+      rekernel_enable: ${{ inputs.rekernel_enable }}
+      baseband_guard: ${{ inputs.baseband_guard }}
+      ccache_update: ${{ inputs.ccache_update }}
+      ccache_debug: ${{ inputs.ccache_debug }}
+      kernel_suffix: ${{ inputs.kernel_suffix }}
+  build_134:
+    name: 构建 6.1.134
+    uses: ./.github/workflows/fastbuild_6.1.134.yml
+    with:
+      ksu_type: ${{ inputs.ksu_type }}
+      susfs_enable: ${{ inputs.susfs_enable }}
+      kpm_enable: ${{ inputs.kpm_enable }}
+      lz4_enable: ${{ inputs.lz4_enable }}
+      lz4kd_enable: ${{ inputs.lz4kd_enable }}
+      bbr_enable: ${{ inputs.bbr_enable }}
+      droidspaces_enable: ${{ inputs.droidspaces_enable }}
+      better_net: ${{ inputs.better_net }}
+      ssg_enable: ${{ inputs.ssg_enable }}
+      rekernel_enable: ${{ inputs.rekernel_enable }}
+      baseband_guard: ${{ inputs.baseband_guard }}
+      ccache_update: ${{ inputs.ccache_update }}
+      ccache_debug: ${{ inputs.ccache_debug }}
+      kernel_suffix: ${{ inputs.kernel_suffix }}
+  build_141:
+    name: 构建 6.1.141
+    uses: ./.github/workflows/fastbuild_6.1.141.yml
+    with:
+      ksu_type: ${{ inputs.ksu_type }}
+      susfs_enable: ${{ inputs.susfs_enable }}
+      kpm_enable: ${{ inputs.kpm_enable }}
+      lz4_enable: ${{ inputs.lz4_enable }}
+      lz4kd_enable: ${{ inputs.lz4kd_enable }}
+      bbr_enable: ${{ inputs.bbr_enable }}
+      droidspaces_enable: ${{ inputs.droidspaces_enable }}
+      better_net: ${{ inputs.better_net }}
+      ssg_enable: ${{ inputs.ssg_enable }}
+      rekernel_enable: ${{ inputs.rekernel_enable }}
+      baseband_guard: ${{ inputs.baseband_guard }}
+      ccache_update: ${{ inputs.ccache_update }}
+      ccache_debug: ${{ inputs.ccache_debug }}
+      kernel_suffix: ${{ inputs.kernel_suffix }}
+  release:
+    name: 汇总七个版本并发布
+    if: ${{ needs.build_57.result == 'success' && needs.build_75.result == 'success' && needs.build_115.result == 'success' && needs.build_118.result == 'success' && needs.build_128.result == 'success' && needs.build_134.result == 'success' && needs.build_141.result == 'success' }}
+    needs:
+      - build_57
+      - build_75
+      - build_115
+      - build_128
+      - build_134
+      - build_141
+      - build_118
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: 下载七个 ZIP 工件
+        uses: actions/download-artifact@v8
+        with:
+          pattern: AnyKernel3_*.zip
+          path: ./release_zips
+          merge-multiple: true
+          skip-decompress: true
+      - name: 校验七个 ZIP 工件
+        shell: bash
+        run: |
+          shopt -s nullglob
+          zips=(release_zips/AnyKernel3_*.zip)
+          if [[ "${#zips[@]}" -ne 7 ]]; then
+            echo "期望 7 个 ZIP，实际找到 ${#zips[@]} 个" >&2
+            printf '%s\n' "${zips[@]}" >&2
+            exit 1
+          fi
+          printf '已找到：%s\n' "${zips[@]}"
+      - name: 创建统一 Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KSU_TYPE: ${{ inputs.ksu_type }}
+          SUSFS_ENABLE: ${{ inputs.susfs_enable }}
+          KPM_ENABLE: ${{ inputs.kpm_enable }}
+          LZ4_ENABLE: ${{ inputs.lz4_enable }}
+          LZ4KD_ENABLE: ${{ inputs.lz4kd_enable }}
+          BBR_ENABLE: ${{ inputs.bbr_enable }}
+          DROIDSPACES_ENABLE: ${{ inputs.droidspaces_enable }}
+          BETTER_NET: ${{ inputs.better_net }}
+          SSG_ENABLE: ${{ inputs.ssg_enable }}
+          REKERNEL_ENABLE: ${{ inputs.rekernel_enable }}
+          BASEBAND_GUARD: ${{ inputs.baseband_guard }}
+          CCACHE_UPDATE: ${{ inputs.ccache_update }}
+          CCACHE_DEBUG: ${{ inputs.ccache_debug }}
+          KERNEL_SUFFIX: ${{ inputs.kernel_suffix }}
+        shell: bash
+        run: |
+          TIME="$(TZ='Asia/Shanghai' date +'%y%m%d%H%M%S')"
+          TIME_FORM="$(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S')"
+          TAG="OPPO-OPlus-Realme-build-all-${TIME}-${GITHUB_RUN_ID}"
+          cat > release_notes.md <<EOF
+          ### 欧加真 SM8650 七版本通用内核
+          - 构建版本：6.1.57、6.1.75、6.1.115、6.1.118、6.1.128、6.1.134、6.1.141
+          - 构建时间：${TIME_FORM}
+          - KernelSU 分支：${KSU_TYPE}
+          - susfs：${SUSFS_ENABLE}
+          - KPM：${KPM_ENABLE}
+          - LZ4：${LZ4_ENABLE}
+          - LZ4KD：${LZ4KD_ENABLE}
+          - BBR：${BBR_ENABLE}
+          - Droidspaces：${DROIDSPACES_ENABLE}
+          - 网络功能增强：${BETTER_NET}
+          - 三星 SSG IO 调度器：${SSG_ENABLE}
+          - Re-Kernel：${REKERNEL_ENABLE}
+          - 内核级基带保护：${BASEBAND_GUARD}
+          - ccache 更新：${CCACHE_UPDATE}
+          - ccache 调试日志：${CCACHE_DEBUG}
+          - 内核后缀：${KERNEL_SUFFIX}
+          EOF
+          gh release create "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "欧加真 SM8650 七版本内核 ${TIME_FORM}" \
+            --notes-file release_notes.md \
+            release_zips/AnyKernel3_*.zip
