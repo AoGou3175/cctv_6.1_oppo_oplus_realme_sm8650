@@ -95,3 +95,15 @@
 - 问题和解决办法：旧运行使用健康的 Azure 镜像所以成功；新运行的 Runner 仍是 Ubuntu 24.04，但 Azure 镜像不可达，现改用 `archive.ubuntu.com` 并保留重试和超时保护。
 - `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
 - GitHub 备份状态：本次修改和快照已提交并推送到公开仓库 `AoGou3175/cctv_6.1_oppo_oplus_realme_sm8650` 的 `main`，提交为 `85f6da4`。
+
+## 2026-08-20 00:47:17
+
+- 修改内容：汇总 Release 根据 `ksu_type` 自动从对应管理器仓库下载并附带一个管理器 APK；`resukisu` 附带 ReSukiSU arm64-v8a 版本，`sukisu`、`ksunext`、`ksu` 分别附带对应分支的最新 Release APK，`none` 不附带 APK。Release 资产同时支持七个 AnyKernel 刷机包和管理器 APK。
+- 修改原因：用户希望汇总 Release 可以直接附带本次构建对应的构建管理器 APK，下载后无需再单独查找管理器。
+- 标题和说明：Release 标题改为“欧加真 ${KSU_TYPENAME} 6.1.X通用内核 | 构建信息”，说明中的机型改为“欧加真6.1.X内核”，并显示实际附带的 APK 文件名。
+- 影响文件：`.github/workflows/build-test_6.1_kpm.yml`、`tests/validate_batch_release.ps1`。
+- 快照文件：`build-test_6.1_kpm-20260820-004717-manager-apk-title.yml`、`validate_batch_release-20260820-004717-manager-apk-title.ps1`。
+- 验证：`validate_batch_release: PASS`；汇总 Release Bash 语法检查通过；`git diff --check` 通过。
+- 问题和解决办法：管理器仓库的 Release 资产名称不统一，已按各分支的 APK 命名规则筛选，并排除 KernelSU Next 的 spoofed APK。
+- `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
+- GitHub 备份状态：本次修改和快照尚未上传 GitHub。
