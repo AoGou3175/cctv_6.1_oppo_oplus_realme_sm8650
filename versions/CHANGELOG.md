@@ -94,4 +94,4 @@
 - 验证：验证脚本输出 `validate_batch_release: PASS`；确认七个工作流都处理 `apt-mirrors.txt`；`git diff --check` 通过。
 - 问题和解决办法：旧运行使用健康的 Azure 镜像所以成功；新运行的 Runner 仍是 Ubuntu 24.04，但 Azure 镜像不可达，现改用 `archive.ubuntu.com` 并保留重试和超时保护。
 - `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
-- GitHub 备份状态：本次修改和快照尚未推送 GitHub。
+- GitHub 备份状态：本次修改和快照已提交并推送到公开仓库 `AoGou3175/cctv_6.1_oppo_oplus_realme_sm8650` 的 `main`，提交为 `85f6da4`。
