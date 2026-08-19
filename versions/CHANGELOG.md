@@ -73,3 +73,14 @@
 - 问题和解决办法：原汇总说明只有一条固定机型描述，已改为逐版本 Markdown 表格并附源码分支链接。
 - `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
 - GitHub 备份状态：本次修改和快照已提交并推送到公开仓库 `AoGou3175/cctv_6.1_oppo_oplus_realme_sm8650` 的 `main`，提交为 `64b13b3`。
+
+## 2026-08-19 23:27:22
+
+- 修改内容：将七版本对应表改为详细句式，例如“欧加真骁龙8Gen3通用 6.1.75 内核（基于一加12 6.1.75 版官方OKI源码）”，并保留每个版本的源码分支链接。
+- 修改原因：仅显示平台和机型简称不够直观，需要在汇总 Release 中直接说明每个内核版本与官方 OKI 源码的对应关系。
+- 影响文件：`.github/workflows/build-test_6.1_kpm.yml`、`tests/validate_batch_release.ps1`。
+- 快照文件：`build-test_6.1_kpm-20260819-232722-detailed-mapping.yml`、`validate_batch_release-20260819-232722-detailed-mapping.ps1`。
+- 验证：验证脚本输出 `validate_batch_release: PASS`；七个版本的详细说明和源码分支检查通过；`git diff --check` 通过。
+- 问题和解决办法：6.1.115/134 使用天玑特供 Ace5/Race 源码，6.1.128 使用天玑特供一加 Pad 源码，已分别按真实工作流来源填写。
+- `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
+- GitHub 备份状态：本次修改和快照尚未推送 GitHub。
