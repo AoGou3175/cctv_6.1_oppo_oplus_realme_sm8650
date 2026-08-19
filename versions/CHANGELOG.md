@@ -83,4 +83,4 @@
 - 验证：验证脚本输出 `validate_batch_release: PASS`；七个版本的详细说明和源码分支检查通过；`git diff --check` 通过。
 - 问题和解决办法：6.1.115/134 使用天玑特供 Ace5/Race 源码，6.1.128 使用天玑特供一加 Pad 源码，已分别按真实工作流来源填写。
 - `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
-- GitHub 备份状态：本次修改和快照尚未推送 GitHub。
+- GitHub 备份状态：本次修改和快照已提交并推送到公开仓库 `AoGou3175/cctv_6.1_oppo_oplus_realme_sm8650` 的 `main`，提交为 `2c2b497`。
