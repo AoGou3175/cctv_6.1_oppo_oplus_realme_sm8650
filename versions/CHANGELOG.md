@@ -84,3 +84,14 @@
 - 问题和解决办法：6.1.115/134 使用天玑特供 Ace5/Race 源码，6.1.128 使用天玑特供一加 Pad 源码，已分别按真实工作流来源填写。
 - `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
 - GitHub 备份状态：本次修改和快照已提交并推送到公开仓库 `AoGou3175/cctv_6.1_oppo_oplus_realme_sm8650` 的 `main`，提交为 `2c2b497`。
+
+## 2026-08-20 00:12:48
+
+- 修改内容：七个构建工作流的 apt 镜像切换逻辑同时处理 `/etc/apt/sources.list`、`/etc/apt/sources.list.d/ubuntu.sources` 和 Ubuntu 24.04 Runner 实际使用的 `/etc/apt/apt-mirrors.txt`。
+- 修改原因：之前成功运行时 Azure apt 镜像可访问；本次运行中该镜像连接超时，之前的修复没有覆盖 `apt-mirrors.txt`，导致仍然访问 Azure 并在 180 秒后退出 124。
+- 影响文件：七个 `.github/workflows/fastbuild_6.1.*.yml`、`tests/validate_batch_release.ps1`。
+- 快照文件：七个 `fastbuild_6.1.*-20260820-001248-apt-mirrorlist-fix.yml`、`validate_batch_release-20260820-001248-apt-mirrorlist-fix.ps1`。
+- 验证：验证脚本输出 `validate_batch_release: PASS`；确认七个工作流都处理 `apt-mirrors.txt`；`git diff --check` 通过。
+- 问题和解决办法：旧运行使用健康的 Azure 镜像所以成功；新运行的 Runner 仍是 Ubuntu 24.04，但 Azure 镜像不可达，现改用 `archive.ubuntu.com` 并保留重试和超时保护。
+- `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
+- GitHub 备份状态：本次修改和快照尚未推送 GitHub。
