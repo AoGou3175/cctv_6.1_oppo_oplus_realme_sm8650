@@ -40,3 +40,14 @@
 - 问题和解决办法：这是工作流启动权限校验错误，不是 KPM 或内核编译错误；已在调用方补齐嵌套 Release 所需权限。
 - `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
 - GitHub 备份状态：修复已在本地，准备推送。
+
+## 2026-08-19 22:37:35
+
+- 修改内容：为七个 `fastbuild_6.1.*.yml` 增加 Ubuntu apt 镜像切换、软件包检测、重试和 180 秒超时；修复 `6.1.128` 添加 KernelSU 前漏掉 `cd kernel_workspace`；增加 `batch_mode`，批量调用时跳过七个单版本 Release。
+- 修改原因：上次运行中五个版本卡在 `azure.archive.ubuntu.com`，6.1.128 因工作目录错误找不到 `drivers/`，并且 6.1.75 产生了不应出现的单版本 Release。
+- 影响文件：`.github/workflows/build-test_6.1_kpm.yml`、七个 `.github/workflows/fastbuild_6.1.*.yml`、`tests/validate_batch_release.ps1`。
+- 快照文件：`build-test_6.1_kpm-20260819-223735-build-stability.yml`、七个 `fastbuild_6.1.*-20260819-223735-build-stability.yml`、`validate_batch_release-20260819-223735-build-stability.ps1`。
+- 验证：`validate_batch_release.ps1` 输出 `validate_batch_release: PASS`；apt、`batch_mode`、6.1.128 工作目录和七个 ZIP 数量检查通过；`git diff --check` 通过。当前环境没有 Python/YAML 解析器，未执行本地 YAML 解析，最终工作流语法由 GitHub Actions 启动校验。
+- 问题和解决办法：GitHub runner 的 Azure Ubuntu 镜像在本次运行中长时间无响应；工作流现在优先跳过已安装依赖，缺少依赖时切换到 `archive.ubuntu.com` 并限制重试时间。
+- `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
+- GitHub 备份状态：本次修改和快照已准备提交，尚未推送 GitHub。
