@@ -62,3 +62,14 @@
 - 问题和解决办法：批量 Release 不会复用子工作流的说明，已在汇总工作流中补齐完整 Markdown 文本。
 - `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
 - GitHub 备份状态：本次修改和快照尚未推送 GitHub。
+
+## 2026-08-19 23:23:00
+
+- 修改内容：在汇总 Release 中增加七版本机型、平台、Android 版本和实际源码分支对应表，分别列出 SM8650/一加12、MT6989/Ace5-Race、MT6897/一加 Pad 的来源。
+- 修改原因：七个构建使用的源码和目标机型并不相同，原说明统一写成一个 SM8650 机型会造成误解。
+- 影响文件：`.github/workflows/build-test_6.1_kpm.yml`、`tests/validate_batch_release.ps1`。
+- 快照文件：`build-test_6.1_kpm-20260819-232300-per-version-mapping.yml`、`validate_batch_release-20260819-232300-per-version-mapping.ps1`。
+- 验证：验证脚本输出 `validate_batch_release: PASS`；七个实际源码分支名称和逐版本映射表检查通过；`git diff --check` 通过。
+- 问题和解决办法：原汇总说明只有一条固定机型描述，已改为逐版本 Markdown 表格并附源码分支链接。
+- `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
+- GitHub 备份状态：本次修改和快照尚未推送 GitHub。
