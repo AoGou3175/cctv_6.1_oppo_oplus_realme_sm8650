@@ -51,3 +51,14 @@
 - 问题和解决办法：GitHub runner 的 Azure Ubuntu 镜像在本次运行中长时间无响应；工作流现在优先跳过已安装依赖，缺少依赖时切换到 `archive.ubuntu.com` 并限制重试时间。
 - `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
 - GitHub 备份状态：本次修改和快照已提交并推送到公开仓库 `AoGou3175/cctv_6.1_oppo_oplus_realme_sm8650` 的 `main`，提交为 `ceecd4f`。
+
+## 2026-08-19 23:06:34
+
+- 修改内容：将单独构建 Release 中的管理器下载链接、更新内容、安装方法、元模块说明和刷写风险提示同步到 `build-test_6.1_kpm.yml` 的汇总 Release；增加 KSU 分支显示名称转换，并使用 `needs.build_57.outputs.ksuver` 显示实际构建输出的版本号。
+- 修改原因：批量汇总 Release 使用独立的 `release_notes.md`，不会自动继承单独构建工作流的完整说明。
+- 影响文件：`.github/workflows/build-test_6.1_kpm.yml`、`tests/validate_batch_release.ps1`。
+- 快照文件：`build-test_6.1_kpm-20260819-230634-release-notes.yml`、`validate_batch_release-20260819-230634-release-notes.ps1`。
+- 验证：验证脚本输出 `validate_batch_release: PASS`；确认管理器链接、Installation Guide、KernelFlasher 和批量 KSU 版本输出引用均存在；`git diff --check` 通过。
+- 问题和解决办法：批量 Release 不会复用子工作流的说明，已在汇总工作流中补齐完整 Markdown 文本。
+- `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
+- GitHub 备份状态：本次修改和快照尚未推送 GitHub。
