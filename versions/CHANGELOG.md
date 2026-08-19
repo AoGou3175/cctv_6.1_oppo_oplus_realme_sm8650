@@ -29,3 +29,14 @@
 - 问题和解决办法：该批量工作流不能单独上传，七个被调用的工作流必须同时声明 `workflow_call` 输入；已确认本地配套文件已具备这些声明。
 - `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
 - GitHub 备份状态：准备上传到公开仓库，上传前尚未执行构建。
+
+## 2026-08-19 16:17:41
+
+- 修改内容：将 `.github/workflows/build-test_6.1_kpm.yml` 的调用方权限从 `contents: read`、`packages: none` 调整为 `contents: write`、`packages: write`。
+- 修改原因：GitHub 启动阶段拒绝可复用工作流的嵌套 `release` job，因为它请求写权限而调用方只提供读权限。
+- 影响文件：`.github/workflows/build-test_6.1_kpm.yml`。
+- 快照文件：`build-test_6.1_kpm-20260819-161741-permissions-fix.yml`。
+- 验证：根据 Actions 运行 32231639371 的 Annotation 定位到权限错误；本地批量工作流验证继续通过。
+- 问题和解决办法：这是工作流启动权限校验错误，不是 KPM 或内核编译错误；已在调用方补齐嵌套 Release 所需权限。
+- `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
+- GitHub 备份状态：修复已在本地，准备推送。
