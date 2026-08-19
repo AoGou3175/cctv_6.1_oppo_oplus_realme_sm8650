@@ -50,4 +50,4 @@
 - 验证：`validate_batch_release.ps1` 输出 `validate_batch_release: PASS`；apt、`batch_mode`、6.1.128 工作目录和七个 ZIP 数量检查通过；`git diff --check` 通过。当前环境没有 Python/YAML 解析器，未执行本地 YAML 解析，最终工作流语法由 GitHub Actions 启动校验。
 - 问题和解决办法：GitHub runner 的 Azure Ubuntu 镜像在本次运行中长时间无响应；工作流现在优先跳过已安装依赖，缺少依赖时切换到 `archive.ubuntu.com` 并限制重试时间。
 - `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
-- GitHub 备份状态：本次修改和快照已准备提交，尚未推送 GitHub。
+- GitHub 备份状态：本次修改和快照已提交并推送到公开仓库 `AoGou3175/cctv_6.1_oppo_oplus_realme_sm8650` 的 `main`，提交为 `ceecd4f`。
