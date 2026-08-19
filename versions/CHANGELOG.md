@@ -106,4 +106,4 @@
 - 验证：`validate_batch_release: PASS`；汇总 Release Bash 语法检查通过；`git diff --check` 通过。
 - 问题和解决办法：管理器仓库的 Release 资产名称不统一，已按各分支的 APK 命名规则筛选，并排除 KernelSU Next 的 spoofed APK。
 - `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
-- GitHub 备份状态：本次修改和快照尚未上传 GitHub。
+- GitHub 备份状态：本次修改和快照已提交并推送到公开仓库 `AoGou3175/cctv_6.1_oppo_oplus_realme_sm8650` 的 `main`，工作流修改提交为 `ffa3fc7`；本条状态修正随后单独提交。
