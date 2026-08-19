@@ -61,7 +61,7 @@
 - 验证：验证脚本输出 `validate_batch_release: PASS`；确认管理器链接、Installation Guide、KernelFlasher 和批量 KSU 版本输出引用均存在；`git diff --check` 通过。
 - 问题和解决办法：批量 Release 不会复用子工作流的说明，已在汇总工作流中补齐完整 Markdown 文本。
 - `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
-- GitHub 备份状态：本次修改和快照尚未推送 GitHub。
+- GitHub 备份状态：本次修改和快照已提交并推送到公开仓库 `AoGou3175/cctv_6.1_oppo_oplus_realme_sm8650` 的 `main`，提交为 `fb4b91f`。
 
 ## 2026-08-19 23:23:00
 
@@ -72,4 +72,4 @@
 - 验证：验证脚本输出 `validate_batch_release: PASS`；七个实际源码分支名称和逐版本映射表检查通过；`git diff --check` 通过。
 - 问题和解决办法：原汇总说明只有一条固定机型描述，已改为逐版本 Markdown 表格并附源码分支链接。
 - `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
-- GitHub 备份状态：本次修改和快照尚未推送 GitHub。
+- GitHub 备份状态：本次修改和快照已提交并推送到公开仓库 `AoGou3175/cctv_6.1_oppo_oplus_realme_sm8650` 的 `main`，提交为 `64b13b3`。
