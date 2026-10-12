@@ -83,3 +83,9 @@
 - 上游补丁容错 `patch -p1 -F 3` 同时检查七个 Actions 工作流与七个本地脚本；不覆盖已有 apt 修复、6.1.128 工作目录修复和单版本发布逻辑。
 - 本地验证（先安装 `tests/requirements.txt`）：`python tests/validate_workflows.py`、`python tests/test_bakasu_policy.py .`、`powershell -NoProfile -ExecutionPolicy Bypass -File tests/validate_batch_release.ps1`、`git diff --check`。Windows 使用 Git Bash，避免误用 WSL 的 `bash.exe`。
 - 测试中的下载、checkout、发布操作使用隔离目录和替身；静态检查及行为测试通过不代表七个内核真实编译或手机刷写通过。未经用户明确要求，不上传、不提交、不启动 Actions。
+
+## 10. 上游代码同步与 Git 历史合并
+
+- 复制或移植上游代码不等于合并上游提交历史；需要消除 GitHub 的 behind 提示时，先 fetch 和审阅上游差异，再正式 merge 保留双方历史。不能用覆盖定制分支、重写历史或忽略整个上游的合并策略代替逐项整合。
+- 对上游与本地修改重叠的冲突，逐段核对已移植的上游改动，保留 workflow_call 接口、inputs.xxx、批量同 SHA、SUSFS 检查、官方管理器、apt 修复和版本说明；合并后检查冲突标记、实际文件差异与必要测试。
+- 合并是否成功要用上游 SHA 的祖先检查及远程 compare 验证；推送后确认 behind=0。ahead 表示仍有本地定制提交，不需要归零。脚本内容未变时沿用已有结果快照，不重复创建相同脚本快照。
