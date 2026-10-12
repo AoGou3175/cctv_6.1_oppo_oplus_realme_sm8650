@@ -11,11 +11,11 @@ echo ">>> 读取用户配置..."
 MANIFEST=${MANIFEST:-oppo+oplus+realme}
 read -p "请输入自定义内核后缀（默认：android14-11-o-gca13bffobf09）: " CUSTOM_SUFFIX
 CUSTOM_SUFFIX=${CUSTOM_SUFFIX:-android14-11-o-gca13bffobf09}
-read -p "是否启用susfs？(y/n，默认：y): " APPLY_SUSFS
-APPLY_SUSFS=${APPLY_SUSFS:-y}
+read -p "是否启用susfs？(y/n，默认：n；最新 BakaSU 暂停联合构建): " APPLY_SUSFS
+APPLY_SUSFS=${APPLY_SUSFS:-n}
 read -p "是否启用 KPM？(y-启用 KpatchNext独立kpm实现, n-关闭kpm，默认：n): " USE_PATCH_LINUX
 USE_PATCH_LINUX=${USE_PATCH_LINUX:-n}
-read -p "KSU分支版本(r=ReSukiSU, y=SukiSU Ultra, n=KernelSU Next, k=KSU, l=lkm模式(无内置KSU), 默认：r): " KSU_BRANCH
+read -p "KSU分支版本(r=BakaSU, y=SukiSU Ultra, n=KernelSU Next, k=KSU, l=lkm模式(无内置KSU), 默认：r): " KSU_BRANCH
 KSU_BRANCH=${KSU_BRANCH:-r}
 read -p "是否应用 lz4 1.10.0 & zstd 1.5.7 补丁？(y/n，默认：y): " APPLY_LZ4
 APPLY_LZ4=${APPLY_LZ4:-y}
@@ -37,7 +37,7 @@ APPLY_BBG=${APPLY_BBG:-y}
 if [[ "$KSU_BRANCH" == "y" || "$KSU_BRANCH" == "Y" ]]; then
   KSU_TYPE="SukiSU Ultra"
 elif [[ "$KSU_BRANCH" == "r" || "$KSU_BRANCH" == "R" ]]; then
-  KSU_TYPE="ReSukiSU"
+  KSU_TYPE="BakaSU"
 elif [[ "$KSU_BRANCH" == "n" || "$KSU_BRANCH" == "N" ]]; then
   KSU_TYPE="KernelSU Next"
 elif [[ "$KSU_BRANCH" == "k" || "$KSU_BRANCH" == "K" ]]; then
@@ -112,8 +112,13 @@ done
 
 # ===== 拉取 KSU 并设置版本号 =====
 if [[ $KSU_BRANCH == [yYrR] ]]; then
-  echo ">>> 拉取 ReSukiSU 并设置版本（由于SukiSU长期未维护无法正常编译，且ReSukiSU兼容sukisu管理器，故SukiSU源码仓库已重定向为resukisu）..."
-  curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s main
+  echo ">>> 拉取 BakaSU 并设置版本（由于SukiSU长期未维护无法正常编译，且BakaSU兼容sukisu管理器，故SukiSU源码仓库已重定向为bakasu）..."
+  curl -fLSs "https://raw.githubusercontent.com/Baka-SU/BakaSU/main/kernel/setup.sh" | bash -s main
+  if [[ "$APPLY_SUSFS" == [yY] && -f ./KernelSU/kernel/tools/susfs_compat.mk ]] &&
+     grep -q 'Please wait susfs update' ./KernelSU/kernel/tools/susfs_compat.mk; then
+    echo "最新 BakaSU 暂停 SUSFS 联合构建，请关闭 SUSFS；不回退旧源码，也不删除上游检查。" >&2
+    exit 1
+  fi
   echo 'CONFIG_KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%@cctv18"' >> ./common/arch/arm64/configs/gki_defconfig
 elif [[ "$KSU_BRANCH" == "n" || "$KSU_BRANCH" == "N" ]]; then
   echo ">>> 拉取 KernelSU Next 并设置版本..."
@@ -149,7 +154,7 @@ if [[ "$APPLY_SUSFS" == [yY] ]]; then
   cp ./susfs4ksu/kernel_patches/fs/* ./common/fs/
   cp ./susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
   cd ./common
-  patch -p1 < 50_add_susfs_in_gki-android14-6.1.patch || true
+  patch -p1 -F 3 < 50_add_susfs_in_gki-android14-6.1.patch || true
   patch -p1 -F 3 < 69_hide_stuff.patch || true
 else
   echo ">>> 未开启susfs，跳过susfs补丁配置..."
@@ -158,7 +163,7 @@ cd "$WORKDIR/kernel_workspace"
 if [[ "$KSU_BRANCH" == [kK] && "$APPLY_SUSFS" == [yY] ]]; then
   cp ./susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU/
   cd ./KernelSU
-  patch -p1 < 10_enable_susfs_for_ksu.patch || true
+  patch -p1 -F 3 < 10_enable_susfs_for_ksu.patch || true
 fi
 cd "$WORKDIR/kernel_workspace"
 
@@ -171,7 +176,7 @@ if [[ "$APPLY_LZ4" == "y" || "$APPLY_LZ4" == "Y" ]]; then
   cp ./oppo_oplus_realme_sm8650/zram_patch/002-zstd.patch ./common/
   cd "$WORKDIR/kernel_workspace/common"
   git apply -p1 < 001-lz4.patch || true
-  patch -p1 < 002-zstd.patch || true
+  patch -p1 -F 3 < 002-zstd.patch || true
   cd "$WORKDIR/kernel_workspace"
 else
   echo ">>> 跳过 LZ4&ZSTD 补丁..."
@@ -220,6 +225,9 @@ if [[ "$APPLY_SUSFS" == [yY] ]]; then
   echo "CONFIG_KSU_SUSFS_SUS_MAP=y" >> "$DEFCONFIG_FILE"
 else
   echo "CONFIG_KSU_SUSFS=n" >> "$DEFCONFIG_FILE"
+  if [[ "$KSU_BRANCH" == [yYrR] ]]; then
+    echo "CONFIG_KSU_TRACEPOINT_HOOK=y" >> "$DEFCONFIG_FILE"
+  fi
 fi
 #添加对 Mountify (backslashxx/mountify) 模块的支持
 echo "CONFIG_TMPFS_XATTR=y" >> "$DEFCONFIG_FILE"

@@ -1,0 +1,461 @@
+name: build-test_6.1_kpm
+
+env:
+  TZ: Asia/Shanghai
+
+on:
+  workflow_dispatch:
+    inputs:
+      ksu_type:
+        description: 'KernelSU 分支'
+        required: true
+        type: choice
+        default: 'bakasu'
+        options:
+          - 'bakasu'
+          - 'sukisu'
+          - 'ksunext'
+          - 'ksu'
+          - 'none'
+      susfs_enable:
+        description: '是否开启 susfs（最新 BakaSU 暂停联合构建，默认关闭）'
+        required: true
+        type: boolean
+        default: false
+      kpm_enable:
+        description: '是否开启 KPM'
+        required: true
+        type: boolean
+        default: true
+      lz4_enable:
+        description: '是否安装 lz4 1.10.0+zstd 1.5.7 补丁'
+        required: true
+        type: boolean
+        default: true
+      lz4kd_enable:
+        description: '是否安装 LZ4KD 补丁'
+        required: true
+        type: boolean
+        default: false
+      bbr_enable:
+        description: 'BBR 算法模式'
+        required: true
+        type: choice
+        default: 'false'
+        options:
+          - 'false'
+          - 'true'
+          - 'default'
+      droidspaces_enable:
+        description: 'Droidspaces 容器支持模式'
+        required: true
+        type: choice
+        default: 'false'
+        options:
+          - 'false'
+          - 'standard'
+          - 'extend'
+      better_net:
+        description: '是否开启网络功能拓展配置'
+        required: true
+        type: boolean
+        default: false
+      ssg_enable:
+        description: '是否启用三星 SSG IO 调度器'
+        required: true
+        type: boolean
+        default: false
+      rekernel_enable:
+        description: '是否启用 Re-Kernel 支持'
+        required: true
+        type: boolean
+        default: false
+      baseband_guard:
+        description: '是否开启内核级基带保护'
+        required: true
+        type: boolean
+        default: false
+      ccache_update:
+        description: '是否更新 ccache 缓存'
+        required: true
+        type: boolean
+        default: false
+      ccache_debug:
+        description: '是否上传 ccache 调试日志'
+        required: true
+        type: boolean
+        default: false
+      kernel_suffix:
+        description: '内核后缀，留空使用默认值'
+        required: false
+        type: string
+        default: 'AoGou'
+
+permissions:
+  actions: write
+  contents: write
+  packages: write
+
+jobs:
+  prepare:
+    name: 核对最新 BakaSU 源码与官方管理器
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      ksu_ref: ${{ steps.source.outputs.ksu_ref }}
+      manager_run_id: ${{ steps.source.outputs.manager_run_id }}
+    steps:
+      - name: 记录最新 main SHA，检查 SUSFS 并查询同提交管理器
+        id: source
+        if: inputs.ksu_type == 'bakasu' || inputs.ksu_type == 'sukisu'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SUSFS_ENABLE: ${{ inputs.susfs_enable }}
+        shell: bash
+        run: |
+          KSU_SHA="$(gh api repos/Baka-SU/BakaSU/git/ref/heads/main --jq '.object.sha')"
+          [[ "$KSU_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          if [[ "$SUSFS_ENABLE" == "true" ]]; then
+            curl --fail --location --retry 3 "https://raw.githubusercontent.com/Baka-SU/BakaSU/$KSU_SHA/kernel/tools/susfs_compat.mk" --output susfs_compat.mk
+            if grep -q 'Please wait susfs update' susfs_compat.mk; then
+              echo "::error::最新 BakaSU 暂停 SUSFS 联合构建，请关闭 SUSFS；不回退旧源码，也不删除上游检查。"
+              exit 1
+            fi
+          fi
+          echo "ksu_ref=$KSU_SHA" >> "$GITHUB_OUTPUT"
+          echo "BakaSU 本次最新源码：$KSU_SHA"
+          if ! MANAGER_RUN_ID="$(gh api "repos/Baka-SU/BakaSU/actions/workflows/build-manager.yml/runs?branch=main&event=push&head_sha=$KSU_SHA&status=success&per_page=5" --jq '.workflow_runs[0].id // empty')"; then
+            MANAGER_RUN_ID=""
+            echo "::warning::官方管理器查询失败，将保留官方下载链接。"
+          fi
+          echo "manager_run_id=$MANAGER_RUN_ID" >> "$GITHUB_OUTPUT"
+          if [[ -z "$MANAGER_RUN_ID" ]]; then
+            echo "::warning::此提交尚无可用的官方管理器，Release 不附带旧 APK。"
+          fi
+  build_57:
+    needs: prepare
+    name: 构建 6.1.57
+    uses: ./.github/workflows/fastbuild_6.1.57.yml
+    with:
+      ksu_ref: ${{ needs.prepare.outputs.ksu_ref || 'main' }}
+      ksu_type: ${{ inputs.ksu_type }}
+      susfs_enable: ${{ inputs.susfs_enable }}
+      kpm_enable: ${{ inputs.kpm_enable }}
+      lz4_enable: ${{ inputs.lz4_enable }}
+      lz4kd_enable: ${{ inputs.lz4kd_enable }}
+      bbr_enable: ${{ inputs.bbr_enable }}
+      droidspaces_enable: ${{ inputs.droidspaces_enable }}
+      better_net: ${{ inputs.better_net }}
+      ssg_enable: ${{ inputs.ssg_enable }}
+      rekernel_enable: ${{ inputs.rekernel_enable }}
+      baseband_guard: ${{ inputs.baseband_guard }}
+      ccache_update: ${{ inputs.ccache_update }}
+      ccache_debug: ${{ inputs.ccache_debug }}
+      kernel_suffix: ${{ inputs.kernel_suffix }}
+      batch_mode: true
+  build_75:
+    needs: prepare
+    name: 构建 6.1.75
+    uses: ./.github/workflows/fastbuild_6.1.75.yml
+    with:
+      ksu_ref: ${{ needs.prepare.outputs.ksu_ref || 'main' }}
+      ksu_type: ${{ inputs.ksu_type }}
+      susfs_enable: ${{ inputs.susfs_enable }}
+      kpm_enable: ${{ inputs.kpm_enable }}
+      lz4_enable: ${{ inputs.lz4_enable }}
+      lz4kd_enable: ${{ inputs.lz4kd_enable }}
+      bbr_enable: ${{ inputs.bbr_enable }}
+      droidspaces_enable: ${{ inputs.droidspaces_enable }}
+      better_net: ${{ inputs.better_net }}
+      ssg_enable: ${{ inputs.ssg_enable }}
+      rekernel_enable: ${{ inputs.rekernel_enable }}
+      baseband_guard: ${{ inputs.baseband_guard }}
+      ccache_update: ${{ inputs.ccache_update }}
+      ccache_debug: ${{ inputs.ccache_debug }}
+      kernel_suffix: ${{ inputs.kernel_suffix }}
+      batch_mode: true
+  build_115:
+    needs: prepare
+    name: 构建 6.1.115
+    uses: ./.github/workflows/fastbuild_6.1.115.yml
+    with:
+      ksu_ref: ${{ needs.prepare.outputs.ksu_ref || 'main' }}
+      ksu_type: ${{ inputs.ksu_type }}
+      susfs_enable: ${{ inputs.susfs_enable }}
+      kpm_enable: ${{ inputs.kpm_enable }}
+      lz4_enable: ${{ inputs.lz4_enable }}
+      lz4kd_enable: ${{ inputs.lz4kd_enable }}
+      bbr_enable: ${{ inputs.bbr_enable }}
+      droidspaces_enable: ${{ inputs.droidspaces_enable }}
+      better_net: ${{ inputs.better_net }}
+      ssg_enable: ${{ inputs.ssg_enable }}
+      rekernel_enable: ${{ inputs.rekernel_enable }}
+      baseband_guard: ${{ inputs.baseband_guard }}
+      ccache_update: ${{ inputs.ccache_update }}
+      ccache_debug: ${{ inputs.ccache_debug }}
+      kernel_suffix: ${{ inputs.kernel_suffix }}
+      batch_mode: true
+  build_118:
+    needs: prepare
+    name: 构建 6.1.118
+    uses: ./.github/workflows/fastbuild_6.1.118.yml
+    with:
+      ksu_ref: ${{ needs.prepare.outputs.ksu_ref || 'main' }}
+      ksu_type: ${{ inputs.ksu_type }}
+      susfs_enable: ${{ inputs.susfs_enable }}
+      kpm_enable: ${{ inputs.kpm_enable }}
+      lz4_enable: ${{ inputs.lz4_enable }}
+      lz4kd_enable: ${{ inputs.lz4kd_enable }}
+      bbr_enable: ${{ inputs.bbr_enable }}
+      droidspaces_enable: ${{ inputs.droidspaces_enable }}
+      better_net: ${{ inputs.better_net }}
+      ssg_enable: ${{ inputs.ssg_enable }}
+      rekernel_enable: ${{ inputs.rekernel_enable }}
+      baseband_guard: ${{ inputs.baseband_guard }}
+      ccache_update: ${{ inputs.ccache_update }}
+      ccache_debug: ${{ inputs.ccache_debug }}
+      kernel_suffix: ${{ inputs.kernel_suffix }}
+      batch_mode: true
+  build_128:
+    needs: prepare
+    name: 构建 6.1.128
+    uses: ./.github/workflows/fastbuild_6.1.128.yml
+    with:
+      ksu_ref: ${{ needs.prepare.outputs.ksu_ref || 'main' }}
+      ksu_type: ${{ inputs.ksu_type }}
+      susfs_enable: ${{ inputs.susfs_enable }}
+      kpm_enable: ${{ inputs.kpm_enable }}
+      lz4_enable: ${{ inputs.lz4_enable }}
+      lz4kd_enable: ${{ inputs.lz4kd_enable }}
+      bbr_enable: ${{ inputs.bbr_enable }}
+      droidspaces_enable: ${{ inputs.droidspaces_enable }}
+      better_net: ${{ inputs.better_net }}
+      ssg_enable: ${{ inputs.ssg_enable }}
+      rekernel_enable: ${{ inputs.rekernel_enable }}
+      baseband_guard: ${{ inputs.baseband_guard }}
+      ccache_update: ${{ inputs.ccache_update }}
+      ccache_debug: ${{ inputs.ccache_debug }}
+      kernel_suffix: ${{ inputs.kernel_suffix }}
+      batch_mode: true
+  build_134:
+    needs: prepare
+    name: 构建 6.1.134
+    uses: ./.github/workflows/fastbuild_6.1.134.yml
+    with:
+      ksu_ref: ${{ needs.prepare.outputs.ksu_ref || 'main' }}
+      ksu_type: ${{ inputs.ksu_type }}
+      susfs_enable: ${{ inputs.susfs_enable }}
+      kpm_enable: ${{ inputs.kpm_enable }}
+      lz4_enable: ${{ inputs.lz4_enable }}
+      lz4kd_enable: ${{ inputs.lz4kd_enable }}
+      bbr_enable: ${{ inputs.bbr_enable }}
+      droidspaces_enable: ${{ inputs.droidspaces_enable }}
+      better_net: ${{ inputs.better_net }}
+      ssg_enable: ${{ inputs.ssg_enable }}
+      rekernel_enable: ${{ inputs.rekernel_enable }}
+      baseband_guard: ${{ inputs.baseband_guard }}
+      ccache_update: ${{ inputs.ccache_update }}
+      ccache_debug: ${{ inputs.ccache_debug }}
+      kernel_suffix: ${{ inputs.kernel_suffix }}
+      batch_mode: true
+  build_141:
+    needs: prepare
+    name: 构建 6.1.141
+    uses: ./.github/workflows/fastbuild_6.1.141.yml
+    with:
+      ksu_ref: ${{ needs.prepare.outputs.ksu_ref || 'main' }}
+      ksu_type: ${{ inputs.ksu_type }}
+      susfs_enable: ${{ inputs.susfs_enable }}
+      kpm_enable: ${{ inputs.kpm_enable }}
+      lz4_enable: ${{ inputs.lz4_enable }}
+      lz4kd_enable: ${{ inputs.lz4kd_enable }}
+      bbr_enable: ${{ inputs.bbr_enable }}
+      droidspaces_enable: ${{ inputs.droidspaces_enable }}
+      better_net: ${{ inputs.better_net }}
+      ssg_enable: ${{ inputs.ssg_enable }}
+      rekernel_enable: ${{ inputs.rekernel_enable }}
+      baseband_guard: ${{ inputs.baseband_guard }}
+      ccache_update: ${{ inputs.ccache_update }}
+      ccache_debug: ${{ inputs.ccache_debug }}
+      kernel_suffix: ${{ inputs.kernel_suffix }}
+      batch_mode: true
+  release:
+    name: 汇总七个版本并发布
+    if: ${{ needs.build_57.result == 'success' && needs.build_75.result == 'success' && needs.build_115.result == 'success' && needs.build_118.result == 'success' && needs.build_128.result == 'success' && needs.build_134.result == 'success' && needs.build_141.result == 'success' }}
+    needs:
+      - prepare
+      - build_57
+      - build_75
+      - build_115
+      - build_128
+      - build_134
+      - build_141
+      - build_118
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: 下载七个 ZIP 工件
+        uses: actions/download-artifact@v8
+        with:
+          pattern: AnyKernel3_*.zip
+          path: ./release_zips
+          merge-multiple: true
+          skip-decompress: true
+      - name: 校验七个 ZIP 工件
+        shell: bash
+        run: |
+          shopt -s nullglob
+          zips=(release_zips/AnyKernel3_*.zip)
+          if [[ "${#zips[@]}" -ne 7 ]]; then
+            echo "期望 7 个 ZIP，实际找到 ${#zips[@]} 个" >&2
+            printf '%s\n' "${zips[@]}" >&2
+            exit 1
+          fi
+          printf '已找到：%s\n' "${zips[@]}"
+      - name: 下载同提交的官方 BakaSU 管理器
+        if: (inputs.ksu_type == 'bakasu' || inputs.ksu_type == 'sukisu') && needs.prepare.outputs.manager_run_id != ''
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          repository: Baka-SU/BakaSU
+          run-id: ${{ needs.prepare.outputs.manager_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: Manager-release
+          path: ./bakasu_manager
+      - name: 创建统一 Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KSU_TYPE: ${{ inputs.ksu_type }}
+          KSUVER: ${{ needs.build_57.outputs.ksuver }}
+          KSU_SHA: ${{ needs.prepare.outputs.ksu_ref }}
+          MANAGER_RUN_ID: ${{ needs.prepare.outputs.manager_run_id }}
+          SUSFS_ENABLE: ${{ inputs.susfs_enable }}
+          KPM_ENABLE: ${{ inputs.kpm_enable }}
+          LZ4_ENABLE: ${{ inputs.lz4_enable }}
+          LZ4KD_ENABLE: ${{ inputs.lz4kd_enable }}
+          BBR_ENABLE: ${{ inputs.bbr_enable }}
+          DROIDSPACES_ENABLE: ${{ inputs.droidspaces_enable }}
+          BETTER_NET: ${{ inputs.better_net }}
+          SSG_ENABLE: ${{ inputs.ssg_enable }}
+          REKERNEL_ENABLE: ${{ inputs.rekernel_enable }}
+          BASEBAND_GUARD: ${{ inputs.baseband_guard }}
+          CCACHE_UPDATE: ${{ inputs.ccache_update }}
+          CCACHE_DEBUG: ${{ inputs.ccache_debug }}
+          KERNEL_SUFFIX: ${{ inputs.kernel_suffix }}
+        shell: bash
+        run: |
+          TIME="$(TZ='Asia/Shanghai' date +'%y%m%d%H%M%S')"
+          TIME_FORM="$(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S')"
+          TAG="OPPO-OPlus-Realme-build-all-${TIME}-${GITHUB_RUN_ID}"
+          MANAGER_REPO=""
+          MANAGER_ASSET_FILTER=""
+          case "$KSU_TYPE" in
+            bakasu|sukisu)
+              KSU_TYPENAME="BakaSU"
+              ;;
+            ksunext)
+              KSU_TYPENAME="KernelSU Next"
+              MANAGER_REPO="KernelSU-Next/KernelSU-Next"
+              MANAGER_ASSET_FILTER='startswith("KernelSU_Next_") and endswith("-release.apk") and (contains("spoofed") | not)'
+              ;;
+            ksu)
+              KSU_TYPENAME="KSU"
+              MANAGER_REPO="tiann/KernelSU"
+              MANAGER_ASSET_FILTER='startswith("KernelSU_") and endswith("-release.apk")'
+              ;;
+            *)
+              KSU_TYPENAME="无内置KSU"
+              ;;
+          esac
+          MANAGER_ASSET_NAME="未附带"
+          MANAGER_SOURCE="上游 Release"
+          SOURCE_NOTE="使用所选分支的当前源码"
+          if [[ "$KSU_TYPE" == "bakasu" || "$KSU_TYPE" == "sukisu" ]]; then
+            SOURCE_NOTE="[本次最新 BakaSU main 提交 ${KSU_SHA}](https://github.com/Baka-SU/BakaSU/commit/${KSU_SHA})；遵守上游 SUSFS 规则（本次：${SUSFS_ENABLE}）"
+            MANAGER_SOURCE="https://github.com/Baka-SU/BakaSU/actions/workflows/build-manager.yml"
+            if [[ -n "$MANAGER_RUN_ID" ]]; then
+              MANAGER_SOURCE="https://github.com/Baka-SU/BakaSU/actions/runs/${MANAGER_RUN_ID}"
+            fi
+            shopt -s nullglob
+            manager_apks=(bakasu_manager/BakaSU_*-arm64-v8a-release.apk)
+            if [[ "${#manager_apks[@]}" -eq 1 ]]; then
+              MANAGER_ASSET_NAME="$(basename "${manager_apks[0]}")"
+              cp "${manager_apks[0]}" "release_zips/$MANAGER_ASSET_NAME"
+            else
+              echo "::warning::未获得同提交的官方 BakaSU APK，不附带旧 ReSukiSU 或其他签名的管理器。请从 $MANAGER_SOURCE 下载。"
+            fi
+          fi
+          if [[ -n "$MANAGER_REPO" ]]; then
+            MANAGER_ASSET_LINE="$(gh api "repos/$MANAGER_REPO/releases/latest" --jq ".assets[] | select(.name | $MANAGER_ASSET_FILTER) | [.name, .browser_download_url] | @tsv" | head -n 1)"
+            if [[ -z "$MANAGER_ASSET_LINE" ]]; then
+              echo "未找到 $MANAGER_REPO 的管理器 APK" >&2
+              exit 1
+            fi
+            IFS=$'\t' read -r MANAGER_ASSET_NAME MANAGER_ASSET_URL <<< "$MANAGER_ASSET_LINE"
+            curl --fail --location --retry 3 "$MANAGER_ASSET_URL" --output "release_zips/$MANAGER_ASSET_NAME"
+          fi
+          cat > release_notes.md <<EOF
+          ### 📱 欧加真 ${KSU_TYPENAME} 6.1.X通用内核 | 构建信息
+          - 内核版本号：6.1.57、6.1.75、6.1.115、6.1.118、6.1.128、6.1.134、6.1.141
+          - 编译时间：${TIME_FORM}
+          - 机型：欧加真6.1.X内核
+          - KSU分支：${KSU_TYPENAME}
+          - KSU源码：${SOURCE_NOTE}
+          - susfs支持：${SUSFS_ENABLE}
+          - KPM支持：${KPM_ENABLE}
+          - LZ4支持：${LZ4_ENABLE}
+          - LZ4KD支持：${LZ4KD_ENABLE}
+          - 网络功能增强：${BETTER_NET}
+          - BBR/Brutal 等拥塞控制算法支持：${BBR_ENABLE}
+          - Droidspaces 容器支持：${DROIDSPACES_ENABLE}
+          - 三星SSG IO调度器支持：${SSG_ENABLE}
+          - Re-Kernel支持：${REKERNEL_ENABLE}
+          - 内核级基带保护支持：${BASEBAND_GUARD}
+          - ccache 更新：${CCACHE_UPDATE}
+          - ccache 调试日志：${CCACHE_DEBUG}
+          - 内核后缀：${KERNEL_SUFFIX}
+
+          ### 📦 各版本内核详细对应关系
+          | 内核版本 | 详细说明 | 源码分支 |
+          | --- | --- | --- |
+          | 6.1.57 | 欧加真骁龙8Gen3通用 6.1.57 内核（基于一加12 6.1.57 版官方OKI源码） | [sm8650_u_14.0.0_oneplus12](https://github.com/cctv18/android_kernel_common_oneplus_sm8650/tree/oneplus/sm8650_u_14.0.0_oneplus12) |
+          | 6.1.75 | 欧加真骁龙8Gen3通用 6.1.75 内核（基于一加12 6.1.75 版官方OKI源码） | [sm8650_v_15.0.0_oneplus12](https://github.com/cctv18/android_kernel_common_oneplus_sm8650/tree/oneplus/sm8650_v_15.0.0_oneplus12) |
+          | 6.1.115 | 欧加真天玑特供 6.1.115 内核（基于一加 Ace5/Race 6.1.115 版官方OKI源码） | [mt6989_v_15.0.2_ace5_race](https://github.com/cctv18/android_kernel_oneplus_mt6989/tree/oneplus/mt6989_v_15.0.2_ace5_race) |
+          | 6.1.118 | 欧加真骁龙8Gen3通用 6.1.118 内核（基于一加12 6.1.118 版官方OKI源码） | [sm8650_b_16.0.0_oneplus12](https://github.com/cctv18/android_kernel_common_oneplus_sm8650/tree/oneplus/sm8650_b_16.0.0_oneplus12) |
+          | 6.1.128 | 欧加真天玑特供 6.1.128 内核（基于一加 Pad 6.1.128 版官方OKI源码） | [mt6897_v_15.0.0_oneplus_pad](https://github.com/cctv18/android_kernel_oneplus_mt6897/tree/oneplus/mt6897_v_15.0.0_oneplus_pad) |
+          | 6.1.134 | 欧加真天玑特供 6.1.134 内核（基于一加 Ace5/Race 6.1.134 版官方OKI源码） | [mt6989_b_16.0.0_ace5_race](https://github.com/cctv18/android_kernel_oneplus_mt6989/tree/oneplus/mt6989_b_16.0.0_ace5_race) |
+          | 6.1.141 | 欧加真骁龙8Gen3通用 6.1.141 内核（基于一加12 6.1.141 版官方OKI源码） | [sm8650_b_16.0.0_oneplus12_6.1.141](https://github.com/cctv18/android_kernel_common_oneplus_sm8650/tree/oneplus/sm8650_b_16.0.0_oneplus12_6.1.141) |
+
+          - BakaSU官方管理器：[Build Manager](https://github.com/Baka-SU/BakaSU/actions/workflows/build-manager.yml)
+          - SukiSU Ultra管理器下载：[SukiSU-Ultra](https://github.com/SukiSU-Ultra/SukiSU-Ultra/releases)
+          - KernelSU Next管理器下载：[KernelSU-Next](https://github.com/KernelSU-Next/KernelSU-Next/releases)
+          - KSU原版管理器下载：[KernelSU](https://github.com/tiann/KernelSU/releases)
+          - 本次构建对应管理器 APK：${MANAGER_ASSET_NAME}
+          - 管理器来源：${MANAGER_SOURCE}
+
+          ### ⏫️ 更新内容：
+          - 更新${KSU_TYPENAME}至最新版本（${KSUVER}）
+          - (预留)
+
+          ### 📋 安装方法 | Installation Guide
+          1. 若你的手机已经安装了第三方Recovery（如TWRP)，可下载对应机型的AnyKernel刷机包后进入Recovery模式，通过Recovery刷入刷机包后重启设备；
+          2. 若你的手机之前已有 root 权限，可在手机上安装[HorizonKernelFlasher](https://github.com/libxzr/HorizonKernelFlasher/releases)，在HorizonKernelFlasher中刷入AnyKernel刷机包并重启；
+          3. 若你之前已刷入SukiSU Ultra内核，且SukiSU Ultra管理器已更新至最新版本，可在SukiSU Ultra管理器中直接刷入AnyKernel刷机包并重启；
+          4. 刷入无lz4kd补丁版的内核前若刷入过lz4kd补丁版的内核，为避免出错，请先关闭zram模块；
+          5. 由于KernelSU上游更新了元模块功能，最新版KSU管理器（包括除KernelSU Next以外的各分支）需要配合元模块(metamodule)才能正常挂载模块。目前的元模块包括[meta overlayfs](https://github.com/KernelSU-Modules-Repo/meta-overlayfs), [mountify](https://github.com/backslashxx/mountify), [meta magicmount](https://github.com/7a72/meta-magic_mount/), [meta magicmount rs](https://github.com/Tools-cx-app/meta-magic_mount/), [hybrid mount](https://github.com/YuzakiKokuban/meta-hybrid_mount)等。若你是第一次使用KSU或刚从旧版KSU管理器升级至新版，请先安装一个元模块，这样其他涉及系统挂载的模块才能正常运行；
+          6. KernelPatch Next（即KPN）是一个独立于KSU的KPM实现，可以运行在任意KSU/面具环境中（不适用于Apatch），且不能与BakaSU/ReSukiSU内置的kpm功能共同使用，使用前请保证你的内核没有内置的kpm实现/修补。
+
+          #### ※※※刷写内核有风险，为防止出现意外导致手机变砖，在刷入内核前请务必用[KernelFlasher](https://github.com/capntrips/KernelFlasher)等软件备份boot等关键启动分区!※※※
+          EOF
+          shopt -s nullglob
+          release_assets=(release_zips/AnyKernel3_*.zip release_zips/*.apk)
+          gh release create "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "欧加真 ${KSU_TYPENAME} 6.1.X通用内核 | 构建信息" \
+            --notes-file release_notes.md \
+            "${release_assets[@]}"
+

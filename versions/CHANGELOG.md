@@ -107,3 +107,62 @@
 - 问题和解决办法：管理器仓库的 Release 资产名称不统一，已按各分支的 APK 命名规则筛选，并排除 KernelSU Next 的 spoofed APK。
 - `AGENTS.md`：未更新，未发现需要新增的长期项目规则。
 - GitHub 备份状态：本次修改和快照已提交并推送到公开仓库 `AoGou3175/cctv_6.1_oppo_oplus_realme_sm8650` 的 `main`，工作流修改提交为 `ffa3fc7`；本条状态修正随后单独提交。
+
+## 2026-08-20 01:15:38
+
+- 修改内容：新增根目录 `AGENTS.md`，整理可迁移到其他项目的 GitHub Actions 内核批量构建规则，包括七版本汇总、构建开关、Reusable Workflow 权限、Release 标题和说明、管理器 APK 附件、apt 镜像、验证、快照和上传注意事项。
+- 修改原因：方便后续其他项目复用本次构建和发布过程中确认过的注意事项与用户偏好。
+- 影响文件：`AGENTS.md`、`versions/CHANGELOG.md`。
+- 快照文件：`AGENTS-20260820-011538-github-actions-kernel-build-guidelines.md`。
+- 验证：确认 `AGENTS.md` 已包含本次项目的批量构建、Release 和上传经验；`git diff --check` 通过（仅有 Git 的 LF→CRLF 提示）。
+- 问题和解决办法：未发现新的坑点；规则按可迁移原则整理，未复制与本项目无关的具体实现细节。
+- `AGENTS.md`：已新增并完成本次长期经验整理。
+- GitHub 备份状态：本次修改和快照尚未上传 GitHub。
+
+## 2026-10-11 20:56:13
+
+- 修改内容：参考 CCTV6.6 和 CCTV6.12 的已验证处理方式，将 CCTV6.1 的七版本 Actions、本地脚本及旧发布测试入口切换为 BakaSU；同步上游补丁命令 `patch -p1 -F 3`。原 6.1.128 工作目录修复已存在，保持不变。
+- 修改原因：6.1 上游已将 ReSukiSU 更新为 BakaSU；最新源码暂停 SUSFS 联合构建，旧 ReSukiSU CI APK 不应与新内核混用。直接套用其他内核参数会丢失 6.1 的 SSG 选项。
+- 批量方案：默认 BakaSU、SUSFS 关闭、KPM 开启；prepare 解析本次最新 main SHA，七个子工作流接收同一 SHA 并检查安装脚本的实际 checkout。导出 workflow_call 的 ksuver、ak3name、ksu_sha，保留七版本全部成功后发布一个 Release。
+- 管理器：按同 SHA、main/push、成功运行查询官方 Build Manager 工件，筛选 arm64-v8a release APK。查询/下载失败或没有匹配 APK 时注明未附带并保留官方链接，不退回旧 ReSukiSU APK；none 模式正常发布七个内核包。
+- 保留内容：七版本实际源码、平台和机型说明，安装及风险提示，SSG 和其他原构建选项，apt 镜像修复，单版本发布及 batch_mode，Numbersf、CCTV6.6、CCTV6.12 均未修改。
+- 影响文件：9 个 YAML 工作流、7 个本地 Shell 脚本、原 PowerShell 校验、新增两个 Python 校验和 requirements.txt、项目 AGENTS.md、.gitattributes。本条仅追加 CHANGELOG，保留本次操作前已有的未提交规则和记录。
+- 问题和解决办法：旧工作流未显式映射 workflow_call.outputs，父工作流无法可靠读取版本号；现补齐输出。BakaSU setup.sh 可能在指定 SHA checkout 失败后继续默认分支；现核对实际 SHA 后失败退出。新增换行检查发现七个本地脚本原为 CRLF，已机械转换为 UTF-8/LF，不改变脚本逻辑；仓库 core.autocrlf=true 且无 .gitattributes，新增 *.sh text eol=lf 防止下次检出又被转回 CRLF（不修改全局 Git 配置）。SUSFS 根据实际源码暂停标记判断，不删除检查、不固定回退旧提交。
+- 验证过程：先对旧逻辑运行检查确认失败，再修改并重跑；首次新增 LF 检查失败后，定位七个脚本全部为 CRLF并修正。
+- 验证结果：actionlint v1.7.12 检查 9 个工作流通过（关闭 shellcheck/pyflakes 外部检查）；七版本调用参数、输出和 ZIP 命名检查通过；168 段 Bash 与 7 个本地脚本语法检查通过；14 项行为测试通过，涵盖上游暂停/恢复、分支别名、批量同 SHA/错误 SHA、官方 APK/旧 APK 拒绝/none 发布；PowerShell 校验 PASS；git diff --check 通过；Git 属性确认 Shell eol=lf；22 个结果快照均与当前文件 SHA-256 相同。
+- 验证边界：下载、checkout、发布行为测试使用隔离目录和替身，未进行真实七版本内核编译、跨仓库工件下载、远程 Release 发布或手机刷写，不据此声称真实构建成功。
+- AGENTS.md：追加当前 BakaSU、动态 SUSFS、同提交官方管理器、子工作流输出、校验方式等长期规则，注明旧 ReSukiSU APK 规则属于历史记录，不覆盖原有规则。
+- GitHub 备份状态：本次修改和快照尚未上传 GitHub；未执行 git add、commit、push，未启动 Actions，未修改仓库可见性。当前原远程为公开 fork，如后续要求上传，须按用户当前私人仓库规则先确认目标。
+- 结果快照（完整路径，22 个，未覆盖已有快照）：
+  - `D:/Codex/构建GKI/CCTV6.1/versions/build-test-20261011-205613-bakasu-upstream.yml`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/build-test_6.1_kpm-20261011-205613-bakasu-upstream.yml`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/fastbuild_6.1.57-20261011-205613-bakasu-upstream.yml`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/builder_6.1.57-20261011-205613-bakasu-upstream.sh`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/fastbuild_6.1.75-20261011-205613-bakasu-upstream.yml`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/builder_6.1.75-20261011-205613-bakasu-upstream.sh`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/fastbuild_6.1.115-20261011-205613-bakasu-upstream.yml`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/builder_6.1.115-20261011-205613-bakasu-upstream.sh`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/fastbuild_6.1.118-20261011-205613-bakasu-upstream.yml`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/builder_6.1.118-20261011-205613-bakasu-upstream.sh`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/fastbuild_6.1.128-20261011-205613-bakasu-upstream.yml`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/builder_6.1.128-20261011-205613-bakasu-upstream.sh`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/fastbuild_6.1.134-20261011-205613-bakasu-upstream.yml`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/builder_6.1.134-20261011-205613-bakasu-upstream.sh`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/fastbuild_6.1.141-20261011-205613-bakasu-upstream.yml`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/builder_6.1.141-20261011-205613-bakasu-upstream.sh`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/validate_batch_release-20261011-205613-bakasu-upstream.ps1`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/validate_workflows-20261011-205613-bakasu-upstream.py`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/test_bakasu_policy-20261011-205613-bakasu-upstream.py`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/requirements-20261011-205613-bakasu-upstream.txt`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/AGENTS-20261011-205613-bakasu-upstream.md`
+  - `D:/Codex/构建GKI/CCTV6.1/versions/gitattributes-20261011-205613-bakasu-upstream.txt`
+
+## 2026-10-12 本地 Git 提交
+
+- 用户要求：提交上一轮已验证的 CCTV6.1 BakaSU 更新；KPM 仅询问含义，不修改开关或实现。
+- 提交范围：上一轮工作流、本地构建脚本、校验脚本、AGENTS.md、.gitattributes、CHANGELOG 和结果快照，同时纳入此前尚未提交的 AGENTS 初始快照；未修改其他项目。
+- 提交前验证：actionlint 检查 9 个工作流通过；七版本参数/输出/ZIP 名称检查、168 段 Bash 和 7 个本地脚本语法检查通过；14 项行为测试通过；PowerShell 校验 PASS；git diff --check 通过；当前文本文件、快照及 Git 文本历史的常见敏感信息模式检查未发现匹配。
+- 暂存检查说明：新增完整快照复制了源文件原有的尾随空格及空白结尾，完整 git diff --cached --check 报出 238 项格式提示，全部位于 versions/ 快照。保持历史快照原样，不为消除提示改写既有脚本；实际代码、规则、校验文件和本次 CHANGELOG 的暂存差异检查通过，22 个快照与源文件 SHA-256 一致。
+- KPM 核对：当前开关使用 KPatch-Next 修补编译后的 Image，并打包 cctv18/KPatch-Next 的 kpn.zip；上游 AnyKernel3 在存在 /data/adb/ksud 时安装该模块，否则跳过。此说明不改变当前构建默认值，不代表手机安装已验证。
+- 快照与规则：沿用上一轮 22 个结果快照，不重复创建；本次仅追加提交记录，AGENTS.md 未再次修改，未发现需要新增的长期规则。
+- GitHub 备份状态：按本次“提交”要求只进行 main 分支的本地 Git 提交，不执行 push，不改变远程仓库或可见性，不启动 Actions。本次修改和快照尚未上传 GitHub。

@@ -85,7 +85,7 @@ if ([regex]::Matches($batch, '(?m)^\s{6}batch_mode:\s+true\s*$').Count -ne 7) {
 }
 
 foreach ($requiredReleaseText in @(
-    'ReSukiSU_CI',
+    'Baka-SU/BakaSU',
     'SukiSU-Ultra',
     'KernelSU-Next',
     'HorizonKernelFlasher',
