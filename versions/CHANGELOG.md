@@ -166,3 +166,13 @@
 - KPM 核对：当前开关使用 KPatch-Next 修补编译后的 Image，并打包 cctv18/KPatch-Next 的 kpn.zip；上游 AnyKernel3 在存在 /data/adb/ksud 时安装该模块，否则跳过。此说明不改变当前构建默认值，不代表手机安装已验证。
 - 快照与规则：沿用上一轮 22 个结果快照，不重复创建；本次仅追加提交记录，AGENTS.md 未再次修改，未发现需要新增的长期规则。
 - GitHub 备份状态：按本次“提交”要求只进行 main 分支的本地 Git 提交，不执行 push，不改变远程仓库或可见性，不启动 Actions。本次修改和快照尚未上传 GitHub。
+
+## 2026-10-12 上传 GitHub
+
+- 用户授权：用户要求上传 GitHub，并在确认目标为公开 fork、与默认私人仓库规则冲突后，明确回复“允许”；本次仅例外允许上传到现有公开仓库，不改变全局私人仓库规则。
+- 上传目标：现有 origin，AoGou3175/cctv_6.1_oppo_oplus_realme_sm8650，main 分支；保持 Public/fork 状态，不修改可见性，不创建新仓库。
+- 同步过程：先 fetch 确认远程无新增提交、本地仅领先一个提交，再正常推送，无强制推送、合并或变基。
+- 上传结果：功能提交 8b29325346a589af82fe0bd1a01f708efea78de4 已推送，工作流、本地脚本、校验、AGENTS.md、配置和 22 个结果快照均包含在该提交；本条上传记录另以文档提交同步。
+- 验证结果：上传前 actionlint 检查 9 个工作流通过、PowerShell 校验 PASS，当前文本文件/快照及 Git 文本历史的敏感信息模式检查未发现匹配；git ls-remote 核对 main 与本地 SHA 一致；GitHub Contents API 回读批量入口、6.1.57 子工作流和 AGENTS.md 的 blob SHA 与本地提交相同。
+- 修改边界：本轮只追加上传记录，未改 KPM 或其他构建设置；未再次修改 AGENTS.md、未重复创建快照、未启动 Actions。尚无本次更新的真实七版本编译、管理器下载、Release 或手机刷写验证结果。
+- GitHub 备份状态：上一轮修改和结果快照已上传到现有公开仓库 main。
